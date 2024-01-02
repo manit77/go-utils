@@ -1,4 +1,4 @@
-module github.com/manit77/goutils
+module github.com/manit77/go-utils
 
 go 1.19
 
