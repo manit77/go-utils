@@ -15,11 +15,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func Hello() string {
-	fmt.Println("hello from utils")
-	return "hello from utils"
-}
-
 func ParseJSONObjectFromFile(filename string, obj interface{}) error {
 	jsonFile, err := os.Open(filename)
 	if err != nil {

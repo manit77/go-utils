@@ -1,28 +1,11 @@
-package goutils
+package tests
 
 import (
 	"fmt"
 	"goutils/data"
-	"regexp"
 	"testing"
 	"time"
 )
-
-// TestHelloName calls greetings.Hello with a name, checking
-// for a valid return value.
-func TestHello(t *testing.T) {
-
-	fmt.Printf("%v \n", "Begin TestHello")
-
-	want := regexp.MustCompile(`\b` + "hello from utils" + `\b`)
-	msg := data.Hello()
-	if want.MatchString(msg) == false {
-		t.Fatalf(`%v does not match %v`, msg, want)
-	}
-
-	fmt.Printf("%v \n", "End TestHello")
-
-}
 
 type TestJSONObj struct {
 	Name string `json:"name"`
