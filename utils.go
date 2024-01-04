@@ -27,34 +27,32 @@ func Hello() string {
 	return "hello from utils"
 }
 
-func ParseJSONObject(filename string) (interface{}, error) {
-
+func ParseJSONObjectFromFile(filename string, obj interface{}) error {
 	jsonFile, err := os.Open(filename)
 	if err != nil {
-		return nil, err
+		return err
 	}
-
 	byteValue, _ := io.ReadAll(jsonFile)
-	var result interface{}
-	json.Unmarshal([]byte(byteValue), &result)
-	jsonFile.Close()
-
-	return result, nil
+	err = ParseJSONObject(string(byteValue), obj)
+	return err
 }
 
 func ParseJSONFromFile(filename string) (map[string]interface{}, error) {
-
 	jsonFile, err := os.Open(filename)
 	if err != nil {
 		return nil, err
 	}
-
 	byteValue, _ := io.ReadAll(jsonFile)
-	var result map[string]interface{}
-	json.Unmarshal([]byte(byteValue), &result)
-	jsonFile.Close()
 
+	var result map[string]interface{}
+	err = ParseJSONObject(string(byteValue), result)
 	return result, nil
+}
+
+func ParseJSONObject(jsond string, obj interface{}) error {
+	byteValue := []byte(jsond)
+	err := json.Unmarshal([]byte(byteValue), &obj)
+	return err
 }
 
 func ParseJSON(jsond string) (map[string]interface{}, error) {
@@ -65,34 +63,18 @@ func ParseJSON(jsond string) (map[string]interface{}, error) {
 }
 
 func HashAndSalt(password string) (string, error) {
-
-	// Use GenerateFromPassword to hash & salt pwd.
-	// MinCost is just an integer constant provided by the bcrypt
-	// package along with DefaultCost & MaxCost.
-	// The cost can be any value you want provided it isn't lower
-	// than the MinCost (4)
 	pwd := []byte(password)
 	hash, err := bcrypt.GenerateFromPassword(pwd, bcrypt.MinCost)
 	if err != nil {
-		// log.Fatal(err)
-		return "", nil
+		return "", err
 	}
-	// GenerateFromPassword returns a byte slice so we need to
-	// convert the bytes to a string and return it
 	return string(hash), nil
 }
 
-func CompareHash(hashedPwd string, password string) (bool, error) {
-	// Since we'll be getting the hashed password from the DB it
-	// will be a string so we'll need to convert it to a byte slice
+func CompareHash(hashedPwd string, password string) error {
 	byteHash := []byte(hashedPwd)
 	err := bcrypt.CompareHashAndPassword(byteHash, []byte(password))
-	if err != nil {
-		// log.Fatal(err)
-		return false, nil
-	}
-
-	return true, nil
+	return err
 }
 
 // pass source and dest as reference
@@ -106,10 +88,10 @@ func CopyStruct(source interface{}, dest interface{}) error {
 }
 
 // timezone = from the IANA Time Zone database
+// US/Pacific, US/Central, US/Mountain, US/Eastern
 func TimeIn(t time.Time, timezone string) (time.Time, error) {
 	loc, err := time.LoadLocation(timezone)
 	if err != nil {
-		// log.Fatal(err)
 		return t, err
 	}
 	t = t.In(loc)
@@ -243,15 +225,15 @@ func RandomInt(max int) int {
 	return r1.Int()
 }
 
-func CopyFileFast(src string, dst string) error {
+func CopyFileFast(srcPath string, dstPath string) error {
 
-	sourceFile, err := os.Open(src)
+	sourceFile, err := os.Open(srcPath)
 	if err != nil {
 		return err
 	}
 	defer sourceFile.Close()
 
-	destFile, err := os.Create(dst)
+	destFile, err := os.Create(dstPath)
 	if err != nil {
 		return err
 	}
@@ -519,6 +501,7 @@ func HTTPGetCode(url string) (int, error) {
 	fmt.Printf("Status Code: %d\n", statusCode)
 	return statusCode, nil
 }
+
 func HTTPostJson(url string, jsond string) (string, error) {
 
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer([]byte(jsond)))
