@@ -2,11 +2,10 @@ package goutils
 
 import (
 	"fmt"
+	"goutils/data"
 	"regexp"
 	"testing"
 	"time"
-
-	"github.com/manit77/go-utils/data"
 )
 
 // TestHelloName calls greetings.Hello with a name, checking

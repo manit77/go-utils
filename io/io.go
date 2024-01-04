@@ -3,6 +3,7 @@ package io
 import (
 	"errors"
 	"fmt"
+	"goutils/data"
 	"io"
 	"io/fs"
 	"log"
@@ -10,8 +11,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-
-	"github.com/manit77/go-utils/data"
 )
 
 func ReadFile(filename string) (string, error) {

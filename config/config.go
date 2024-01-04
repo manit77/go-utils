@@ -2,8 +2,7 @@ package config
 
 import (
 	_ "fmt"
-
-	"github.com/manit77/go-utils/data"
+	"goutils/data"
 )
 
 type Configs struct {

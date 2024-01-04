@@ -2,9 +2,8 @@ package goutils
 
 import (
 	"fmt"
+	"goutils/config"
 	"testing"
-
-	"github.com/manit77/go-utils/config"
 )
 
 // TestHelloName calls greetings.Hello with a name, checking
