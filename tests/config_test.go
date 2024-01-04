@@ -3,6 +3,8 @@ package goutils
 import (
 	"fmt"
 	"testing"
+
+	"github.com/manit77/go-utils/config"
 )
 
 // TestHelloName calls greetings.Hello with a name, checking
@@ -11,8 +13,8 @@ func TestConfig(t *testing.T) {
 
 	fmt.Printf("%v \n", "Begin TestConfig")
 
-	var appConfig Configs
-	err := appConfig.LoadConfig("config.json")
+	var appConfig config.Configs
+	err := appConfig.LoadConfig("test-config.json")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -1,7 +1,9 @@
-package goutils
+package config
 
 import (
 	_ "fmt"
+
+	"github.com/manit77/go-utils/data"
 )
 
 type Configs struct {
@@ -14,11 +16,12 @@ type ConfigItem struct {
 }
 
 func (c *Configs) LoadConfig(filepath string) error {
-	var err error
-	c.ConfigItems, err = ParseJSON(filepath)
+
+	results, err := data.ParseJSONFromFile(filepath)
 	if err != nil {
 		return err
 	}
+	c.ConfigItems = results.(map[string]interface{})
 	return nil
 }
 

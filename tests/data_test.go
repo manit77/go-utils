@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"testing"
 	"time"
+
+	"github.com/manit77/go-utils/data"
 )
 
 // TestHelloName calls greetings.Hello with a name, checking
@@ -14,7 +16,7 @@ func TestHello(t *testing.T) {
 	fmt.Printf("%v \n", "Begin TestHello")
 
 	want := regexp.MustCompile(`\b` + "hello from utils" + `\b`)
-	msg := Hello()
+	msg := data.Hello()
 	if want.MatchString(msg) == false {
 		t.Fatalf(`%v does not match %v`, msg, want)
 	}
@@ -32,7 +34,7 @@ func TestParseJSONObject(t *testing.T) {
 
 	jsond := "{ \"name\" : \"namevalue\", \"id\" : 5 }"
 	var testObj TestJSONObj
-	err := ParseJSONObject(jsond, &testObj)
+	err := data.ParseJSONObject(jsond, &testObj)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -52,10 +54,12 @@ func TestParseJSON(t *testing.T) {
 
 	jsond := "{ \"name\" : \"namevalue\", \"id\" : 5 }"
 
-	testObj, err := ParseJSON(jsond)
+	obj, err := data.ParseJSON(jsond)
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	testObj := obj.(map[string]interface{})
 
 	//json numbers are parsed as float64
 	if testObj["id"].(float64) != 5 {
@@ -70,7 +74,7 @@ func TestParseJSON(t *testing.T) {
 
 func TestHashAndSalt(t *testing.T) {
 	password := "secret1234"
-	result, err := HashAndSalt(password)
+	result, err := data.HashAndSalt(password)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -84,29 +88,29 @@ func TestHashAndSalt(t *testing.T) {
 func TestCompareHash(t *testing.T) {
 
 	password := "secret1234"
-	hash, err := HashAndSalt(password)
+	hash, err := data.HashAndSalt(password)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = CompareHash(hash, password)
+	err = data.CompareHash(hash, password)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = CompareHash("1111", password)
+	err = data.CompareHash("1111", password)
 	if err == nil {
 		t.Fatal("error should be thrown for invalid hash")
 	}
 
 	//generate new hash, and compare to old password should return false
 	newpassword := "secret12345"
-	hash, err = HashAndSalt(newpassword)
+	hash, err = data.HashAndSalt(newpassword)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = CompareHash(hash, password)
+	err = data.CompareHash(hash, password)
 	if err == nil {
 		t.Fatal("error should be thrown on hash not matching")
 	}
@@ -121,7 +125,7 @@ func TestCopyStruct(t *testing.T) {
 	struct1.Name = "name"
 	struct1.Id = 10
 
-	err := CopyStruct(&struct1, &struct2)
+	err := data.CopyStruct(&struct1, &struct2)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -140,7 +144,7 @@ func TestTimeIn(t *testing.T) {
 	cdate := time.Date(2024, time.January, 1, 0, 0, 0, 0, time.UTC)
 	fmt.Println("cdate:", cdate)
 
-	ctime, err := TimeIn(cdate, "US/Central")
+	ctime, err := data.TimeIn(cdate, "US/Central")
 	if err != nil {
 		t.Fatal(err)
 	}

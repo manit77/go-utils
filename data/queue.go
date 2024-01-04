@@ -1,6 +1,6 @@
 // LIFO and FIFO in Golang
-//https://www.golangprograms.com/golang-program-for-implementation-lifo-stack-and-fifo-queue.html
-package goutils
+// https://www.golangprograms.com/golang-program-for-implementation-lifo-stack-and-fifo-queue.html
+package data
 
 import (
 	"fmt"

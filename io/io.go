@@ -1,102 +1,18 @@
-package goutils
+package io
 
 import (
-	"bytes"
-	"crypto/md5"
-	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"io/fs"
 	"log"
-	"math/rand"
-	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"time"
 
-	"github.com/jinzhu/copier"
-	"golang.org/x/crypto/bcrypt"
+	"github.com/manit77/go-utils/data"
 )
-
-func Hello() string {
-	fmt.Println("hello from utils")
-	return "hello from utils"
-}
-
-func ParseJSONObjectFromFile(filename string, obj interface{}) error {
-	jsonFile, err := os.Open(filename)
-	if err != nil {
-		return err
-	}
-	byteValue, _ := io.ReadAll(jsonFile)
-	err = ParseJSONObject(string(byteValue), obj)
-	return err
-}
-
-func ParseJSONFromFile(filename string) (map[string]interface{}, error) {
-	jsonFile, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	byteValue, _ := io.ReadAll(jsonFile)
-
-	var result map[string]interface{}
-	err = ParseJSONObject(string(byteValue), result)
-	return result, nil
-}
-
-func ParseJSONObject(jsond string, obj interface{}) error {
-	byteValue := []byte(jsond)
-	err := json.Unmarshal([]byte(byteValue), &obj)
-	return err
-}
-
-func ParseJSON(jsond string) (map[string]interface{}, error) {
-	byteValue := []byte(jsond)
-	var result map[string]interface{}
-	json.Unmarshal([]byte(byteValue), &result)
-	return result, nil
-}
-
-func HashAndSalt(password string) (string, error) {
-	pwd := []byte(password)
-	hash, err := bcrypt.GenerateFromPassword(pwd, bcrypt.MinCost)
-	if err != nil {
-		return "", err
-	}
-	return string(hash), nil
-}
-
-func CompareHash(hashedPwd string, password string) error {
-	byteHash := []byte(hashedPwd)
-	err := bcrypt.CompareHashAndPassword(byteHash, []byte(password))
-	return err
-}
-
-// pass source and dest as reference
-func CopyStruct(source interface{}, dest interface{}) error {
-	err := copier.Copy(dest, source)
-	if err != nil {
-		// log.Fatal(err)
-		return err
-	}
-	return nil
-}
-
-// timezone = from the IANA Time Zone database
-// US/Pacific, US/Central, US/Mountain, US/Eastern
-func TimeIn(t time.Time, timezone string) (time.Time, error) {
-	loc, err := time.LoadLocation(timezone)
-	if err != nil {
-		return t, err
-	}
-	t = t.In(loc)
-	return t, err
-}
 
 func ReadFile(filename string) (string, error) {
 	file, err := os.Open(filename)
@@ -207,22 +123,6 @@ func DeleteDirectory(dirname string) error {
 		return nil
 	}
 	return errors.New("not a directory")
-}
-
-func ToString(arg interface{}) string {
-	if arg == nil {
-		return ""
-	}
-	return fmt.Sprintf("%v", arg)
-}
-
-func RandomInt(max int) int {
-	s1 := rand.NewSource(time.Now().UnixNano())
-	r1 := rand.New(s1)
-	if max > 0 {
-		return r1.Intn(max)
-	}
-	return r1.Int()
 }
 
 func CopyFileFast(srcPath string, dstPath string) error {
@@ -378,30 +278,37 @@ func CopyDir1(source string, destination string) error {
 	return err
 }
 
-func GetMD5sum(filename string) (string, error) {
-	// Open the file
-	file, err := os.Open(filename)
-	if err != nil {
-		return "", err
-	}
-	defer file.Close()
+func GetDirectoryEntries(dir string) ([]fs.DirEntry, error) {
 
-	// Create a new MD5 hash object
-	hash := md5.New()
-
-	// Read the file contents into the MD5 hash object
-	_, err = io.Copy(hash, file)
+	entries, err := os.ReadDir(dir)
 	if err != nil {
-		return "", err
+		log.Println(err)
+		return nil, err
 	}
 
-	// Calculate the MD5 checksum of the file contents
-	checksum := hash.Sum(nil)
+	return entries, nil
+}
 
-	// Convert the MD5 checksum to a string
-	checksumString := hex.EncodeToString(checksum)
+func GetPathSeperator() string {
+	path, err := GetCurrentDirectory()
 
-	return checksumString, nil
+	if err != nil {
+		return string(filepath.Separator)
+	}
+
+	if strings.Index(path, "/") > -1 {
+		return "/"
+	}
+
+	if strings.Index(path, "\\") > -1 {
+		return "\\"
+	}
+	return string(filepath.Separator)
+}
+
+func CreateDirectory(dirPath string) error {
+
+	return os.Mkdir(dirPath, 0755)
 }
 
 func GetFileName(path string) string {
@@ -427,25 +334,14 @@ func GetCurrentDirectory() (string, error) {
 	return exePath, nil
 }
 
-type customWriter struct {
-	builder strings.Builder
-}
-
-func (cw *customWriter) Write(p []byte) (n int, err error) {
-	l, err := cw.builder.WriteString(string(p))
-	//fmt.Println(l, err)
-	fmt.Print(string(p))
-	return l, err
-}
-
 func ExecCMD(workingdir string, args ...string) (string, error) {
 
 	log.Printf("ExecCMD %v", args)
 
-	cwOut := customWriter{}
-	cwOut.builder = strings.Builder{}
-	cwErr := customWriter{}
-	cwErr.builder = strings.Builder{}
+	cwOut := data.CustomWriter{}
+	cwOut.Builder = strings.Builder{}
+	cwErr := data.CustomWriter{}
+	cwErr.Builder = strings.Builder{}
 
 	baseCmd := args[0]
 	cmdArgs := args[1:]
@@ -459,104 +355,6 @@ func ExecCMD(workingdir string, args ...string) (string, error) {
 	if err != nil {
 		log.Printf("ExecCMD failed with %s\n", err)
 	}
-	output := fmt.Sprintf("%s %s", cwOut.builder.String(), cwErr.builder.String())
+	output := fmt.Sprintf("%s %s", cwOut.Builder.String(), cwErr.Builder.String())
 	return output, nil
-}
-
-func HTTPGetBody(url string) (string, error) {
-
-	// Send an HTTP GET request
-	response, err := http.Get(url)
-	if err != nil {
-		fmt.Println("Error:", err)
-		return "", err
-	}
-	defer response.Body.Close()
-
-	// Read the response body
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		fmt.Println("Error reading response:", err)
-		return "", err
-	}
-
-	// Convert the response body to a string
-	return string(body), nil
-
-}
-
-func HTTPGetCode(url string) (int, error) {
-
-	response, err := http.Head(url)
-	if err != nil {
-		fmt.Println("Error:", err)
-		return 0, err
-	}
-
-	status := response.Status
-	statusCode := response.StatusCode
-
-	fmt.Printf("URL: %s\n", url)
-	fmt.Printf("HTTP Status: %s\n", status)
-	fmt.Printf("Status Code: %d\n", statusCode)
-	return statusCode, nil
-}
-
-func HTTPostJson(url string, jsond string) (string, error) {
-
-	resp, err := http.Post(url, "application/json", bytes.NewBuffer([]byte(jsond)))
-	if err != nil {
-		fmt.Println("Error:", err)
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	// Read the response body.
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println("Error reading response:", err)
-		return "", err
-	}
-	return string(body), nil
-}
-
-func GetDirectoryEntries(dir string) ([]fs.DirEntry, error) {
-
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		log.Println(err)
-		return nil, err
-	}
-
-	return entries, nil
-}
-
-func EndsWith(s, suffix string) bool {
-	if len(s) < len(suffix) {
-		return false
-	}
-
-	return s[len(s)-len(suffix):] == suffix
-}
-
-func GetPathSeperator() string {
-	path, err := GetCurrentDirectory()
-
-	if err != nil {
-		return string(filepath.Separator)
-	}
-
-	if strings.Index(path, "/") > -1 {
-		return "/"
-	}
-
-	if strings.Index(path, "\\") > -1 {
-		return "\\"
-	}
-	return string(filepath.Separator)
-}
-
-func CreateDirectory(dirPath string) error {
-
-	return os.Mkdir(dirPath, 0755)
 }
